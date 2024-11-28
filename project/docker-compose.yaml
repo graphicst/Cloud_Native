@@ -1,0 +1,77 @@
+version: '3.8'  # Docker Compose 버전
+
+networks:
+  app_network:  # 컨테이너 간 통신을 위한 네트워크 정의
+    driver: bridge  # 브리지 네트워크 사용
+
+services:  # 서비스 정의
+  db:  # MySQL 데이터베이스 서비스
+    image: mysql:8.0  # MySQL 8.0 이미지를 사용
+    container_name: income_expense_db  # 컨테이너 이름 설정
+    restart: always  # 컨테이너가 중단되면 자동으로 재시작
+    environment:  # MySQL 환경 변수 설정
+      MYSQL_ROOT_PASSWORD: 123456  # MySQL root 사용자 비밀번호
+      MYSQL_DATABASE: php-mysql  # 생성할 기본 데이터베이스 이름
+      MYSQL_USER: php-mysql  # 데이터베이스 사용자 이름
+      MYSQL_PASSWORD: 123456  # 데이터베이스 사용자 비밀번호
+    volumes:  # 데이터와 초기 SQL 스크립트를 위한 볼륨 설정
+      - db_data:/var/lib/mysql  # MySQL 데이터를 영구적으로 저장
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro  # 초기화 SQL 파일 로드 (읽기 전용)
+    networks:
+      - app_network  # app_network 네트워크에 연결
+    ports:
+      - "3307:3306"  # 호스트의 3307 포트를 MySQL의 3306 포트로 매핑
+    command:  # MySQL 서버의 문자 집합 및 정렬 설정
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+
+  backend:  # PHP 백엔드 서비스
+    build:
+      context: ./backend  # Dockerfile이 있는 backend 디렉터리
+    container_name: income_expense_backend  # 컨테이너 이름 설정
+    restart: always  # 컨테이너가 중단되면 자동으로 재시작
+    depends_on:  # db 서비스가 준비된 후 실행
+      - db
+    volumes:
+      - ./backend:/var/www/html  # 호스트의 backend 디렉터리를 컨테이너의 웹 루트로 마운트
+    networks:
+      - app_network  # app_network 네트워크에 연결
+    ports:
+      - "8080:80"  # 호스트의 8080 포트를 컨테이너의 80 포트로 매핑
+
+  frontend:  # 프론트엔드 서비스
+    build:
+      context: ./frontend  # Dockerfile이 있는 frontend 디렉터리
+    container_name: income_expense_frontend  # 컨테이너 이름 설정
+    restart: always  # 컨테이너가 중단되면 자동으로 재시작
+    volumes:
+      - ./frontend:/usr/share/nginx/html  # 호스트의 frontend 디렉터리를 Nginx의 기본 HTML 디렉터리로 마운트
+    networks:
+      - app_network  # app_network 네트워크에 연결
+    ports:
+      - "3000:80"  # 호스트의 3000 포트를 컨테이너의 80 포트로 매핑
+
+  nginx_proxy_manager:  # Nginx Proxy Manager 서비스
+    image: jc21/nginx-proxy-manager:latest  # 최신 버전의 Nginx Proxy Manager 이미지
+    container_name: nginx_proxy_manager  # 컨테이너 이름 설정
+    restart: always  # 컨테이너가 중단되면 자동으로 재시작
+    ports:
+      - "81:81"  # 호스트의 81 포트를 Nginx Proxy Manager의 웹 UI 포트로 매핑
+      - "80:80"  # 호스트의 80 포트를 HTTP 요청 처리 포트로 매핑
+      - "443:443"  # 호스트의 443 포트를 HTTPS 요청 처리 포트로 매핑
+    environment:  # Nginx Proxy Manager의 데이터베이스 연결 설정
+      DB_MYSQL_HOST: db  # 데이터베이스 서비스의 호스트 이름
+      DB_MYSQL_PORT: 3306  # 데이터베이스 서비스의 포트
+      DB_MYSQL_USER: php-mysql  # 데이터베이스 사용자 이름
+      DB_MYSQL_PASSWORD: 123456  # 데이터베이스 사용자 비밀번호
+      DB_MYSQL_NAME: php-mysql  # 데이터베이스 이름
+    depends_on:  # db 서비스가 준비된 후 실행
+      - db
+    volumes:  # Nginx Proxy Manager의 데이터와 인증서 저장을 위한 볼륨 설정
+      - ./data:/data  # 데이터 디렉터리
+      - ./letsencrypt:/etc/letsencrypt  # SSL 인증서를 저장하는 디렉터리
+    networks:
+      - app_network  # app_network 네트워크에 연결
+
+volumes:
+  db_data:  # MySQL 데이터 저장을 위한 영구 볼륨

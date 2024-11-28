@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8"> <!-- 문서의 문자 인코딩 설정 (UTF-8) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- 반응형 웹 설정 -->
+    <title>월별 가계부</title> <!-- 브라우저 탭 제목 -->
+    <link rel="stylesheet" href="style.css"> <!-- 외부 CSS 파일 연결 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- jQuery 라이브러리 포함 -->
+    <script src="app.js" defer></script> <!-- JavaScript 파일 로드 (defer: HTML 로드 후 실행) -->
+</head>
+
+<body>
+    <h1>월별 가계부</h1> <!-- 페이지 제목 -->
+
+    <div id="user-info" style="text-align: right; margin: 10px; display: none;">
+        <span id="user-name"></span>님 <button id="logout-btn" onclick="logout()">로그아웃</button>
+    </div>
+
+    <!-- 로그인 폼 -->
+    <div id="login-form">
+        <h2>로그인</h2>
+        <input type="text" id="login-username" placeholder="아이디" required />
+        <input type="password" id="login-password" placeholder="비밀번호" required />
+        <button onclick="login()">로그인</button>
+        <p>
+            계정이 없으신가요?
+            <a href="#" onclick="showRegisterForm()">회원가입</a>
+        </p>
+    </div>
+
+    <!-- 회원가입 폼 -->
+    <div id="register-form" style="display: none;">
+        <h2>회원가입</h2>
+        <input type="text" id="register-username" placeholder="아이디" required />
+        <input type="password" id="register-password" placeholder="비밀번호" required />
+        <input type="password" id="register-confirm-password" placeholder="비밀번호 확인" required />
+        <button onclick="register()">회원가입</button>
+        <p>
+            이미 계정이 있으신가요?
+            <a href="#" onclick="showLoginForm()">로그인</a>
+        </p>
+    </div>
+
+    <!-- 입력 폼 -->
+    <div id="input-form">
+        <form id="transaction-form">
+            <!-- 날짜 입력 -->
+            <input type="date" name="transaction_date" required />
+            <!-- 카테고리 입력 -->
+            <input type="text" name="category" placeholder="카테고리" required />
+            <!-- 상세 내용 입력 -->
+            <input type="text" name="description" placeholder="상세" required />
+            <!-- 금액 입력 -->
+            <input type="number" step="0.01" name="amount" placeholder="금액" required />
+            <!-- 제출 버튼 -->
+            <button type="submit">입력</button>
+        </form>
+    </div>
+
+    <!-- 전체 누적 금액 -->
+    <div style="text-align: center; font-size: 24px; margin: 20px;">
+        <span>월별 누적 금액:</span>
+        <!-- 총 금액 표시 -->
+        <span id="totalAmount" style="font-weight: bold; color: #007bff;">0</span>
+    </div>
+
+    <!-- 월별 데이터 탐색 -->
+    <div id="month-navigation" style="display: flex; justify-content: space-between; align-items: center;">
+        <!-- 이전 달 버튼 -->
+        <button id="prevMonthBtn" style="padding: 10px;">◀ 이전 달</button>
+        <!-- 현재 표시 중인 월 -->
+        <h2 id="current-month" style="margin: 0;">2024-11</h2>
+        <!-- 다음 달 버튼 -->
+        <button id="nextMonthBtn" style="padding: 10px;">다음 달 ▶</button>
+    </div>
+
+    <!-- 트랜잭션 테이블 -->
+    <table id="transaction-table">
+        <thead>
+            <tr>
+                <th>날짜</th> <!-- 거래 날짜 -->
+                <th>카테고리</th> <!-- 거래 카테고리 -->
+                <th>상세</th> <!-- 거래 상세 내용 -->
+                <th>금액</th> <!-- 거래 금액 -->
+                <th>삭제</th> <!-- 삭제 버튼 -->
+            </tr>
+        </thead>
+        <tbody id="transactionTableBody">
+            <!-- 거래 내역이 여기에 동적으로 추가됨 -->
+        </tbody>
+    </table>
+</body>
+
+</html>
